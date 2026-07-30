@@ -2,13 +2,13 @@
 
 CoAP ([RFC 7252](https://www.rfc-editor.org/rfc/rfc7252)) wire format and runtime for Elixir.
 
-WickCoap is the BEAM equivalent of [Eclipse Californium](https://eclipse.dev/californium/) — a generic CoAP library that knows nothing about the application protocol layered on top. It is the transport sibling of [Wick](https://github.com/Finnlytics/wick), which provides LwM2M protocol primitives. The two are independent; WickCoap can be used standalone for any CoAP application.
+WickCoap is the BEAM equivalent of [Eclipse Californium](https://eclipse.dev/californium/) — a generic CoAP library that knows nothing about the application protocol layered on top. It is the transport sibling of [Wick](../wick), which provides LwM2M protocol primitives. The two are independent; WickCoap can be used standalone for any CoAP application.
 
 ## Status
 
 Pre-release. The wire format, runtime (retransmission, deduplication), Block-wise transfer (RFC 7959), Observe (RFC 7641), and DTLS over OTP `:ssl` are all in place. See [Security](#security) for what's possible and what is blocked upstream in OTP.
 
-The library carries the full LwM2M 1.2 surface in [Wick](https://github.com/Finnlytics/wick) — all four interfaces, both directions — which is the closest thing to a real-world exercise it has had.
+The library carries the full LwM2M 1.2 surface in [Wick](../wick) — all four interfaces, both directions — which is the closest thing to a real-world exercise it has had.
 
 Two known gaps, both deferred rather than overlooked:
 
