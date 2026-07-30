@@ -1,0 +1,32 @@
+# Build artefacts
+/_build/
+/cover/
+/deps/
+/doc/
+/.fetch
+erl_crash.dump
+*.ez
+*.beam
+
+# Mix
+*.secret.exs
+.elixir_ls/
+.lexical/
+
+# Dialyzer
+/priv/plts/
+
+# Secrets / local env
+.env
+.env.*
+
+# Test fixtures generated at runtime
+/tmp/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+.claude/
+*.swp
+*~

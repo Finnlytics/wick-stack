@@ -1,0 +1,6 @@
+{
+  "description": "Per-record time offset (SenML label t) — exercises the t encoder path",
+  "records": [
+    { "name": "/3303/0/5700", "time": 5, "number_value": 22.5 }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "description": "Single integer-value record /3/0/9 = 87",
+  "records": [
+    { "name": "/3/0/9", "number_value": 87 }
+  ]
+}

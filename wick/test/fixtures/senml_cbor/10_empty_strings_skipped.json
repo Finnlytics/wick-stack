@@ -1,0 +1,6 @@
+{
+  "description": "Empty base_name and empty name should be skipped (Leshan isEmpty parity)",
+  "records": [
+    { "base_name": "", "name": "", "number_value": 5 }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "description": "Single opaque-value record /3/0/3 = 0xDEADBEEF",
+  "records": [
+    { "name": "/3/0/3", "opaque_value": "DEADBEEF" }
+  ]
+}

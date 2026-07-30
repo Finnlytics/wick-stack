@@ -1,0 +1,6 @@
+{
+  "description": "Single objlnk record /3/0/14 = 1:0 (uses string key 'vlo')",
+  "records": [
+    { "name": "/3/0/14", "object_link_value": "1:0" }
+  ]
+}

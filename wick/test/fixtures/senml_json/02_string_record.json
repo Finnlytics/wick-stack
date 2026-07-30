@@ -1,0 +1,6 @@
+{
+  "description": "Single string-value record /3/0/0 = 'Open Mobile Alliance'",
+  "records": [
+    { "name": "/3/0/0", "string_value": "Open Mobile Alliance" }
+  ]
+}

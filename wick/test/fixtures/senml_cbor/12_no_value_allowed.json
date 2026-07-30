@@ -1,0 +1,7 @@
+{
+  "description": "Read-Composite-style record with no value field; allow_no_value=true",
+  "allow_no_value": true,
+  "records": [
+    { "name": "/3/0/9" }
+  ]
+}

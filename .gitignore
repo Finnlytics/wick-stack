@@ -1,0 +1,36 @@
+# Applies across every project in the monorepo. The per-project .gitignore files are kept as
+# well, so each directory still behaves correctly if it is ever extracted on its own.
+
+# Build artefacts — unanchored so they match at any depth
+_build/
+cover/
+deps/
+doc/
+.fetch
+erl_crash.dump
+*.ez
+*.beam
+
+# Mix
+*.secret.exs
+.elixir_ls/
+.lexical/
+
+# Dialyzer PLTs
+priv/plts/
+
+# Secrets / local env
+.env
+.env.*
+
+# Java oracle build output (see wick/docs/decisions/0002)
+tools/leshan_oracle/target/
+tools/leshan_oracle/.idea/
+tools/leshan_oracle/*.iml
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~

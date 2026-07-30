@@ -1,0 +1,6 @@
+{
+  "description": "Float 1.5 should pack into float16 (RFC 8949 §4.2.1 shortest form)",
+  "records": [
+    { "name": "/3303/0/5700", "number_value": 1.5 }
+  ]
+}

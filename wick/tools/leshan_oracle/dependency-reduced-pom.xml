@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.finnlytics.wick</groupId>
+  <artifactId>leshan-oracle</artifactId>
+  <name>Wick Leshan Oracle</name>
+  <version>1.0.0-SNAPSHOT</version>
+  <description>Generates expected SenML CBOR fixture bytes for Wick's codec tests, using
+        Eclipse Leshan 2.0.0-M18 as the reference implementation. See
+        docs/decisions/0002-oracle-pinned-to-leshan-2x.md for why M18 and not 1.5.</description>
+  <build>
+    <finalName>leshan-oracle</finalName>
+    <plugins>
+      <plugin>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.6.0</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <transformers>
+                <transformer>
+                  <mainClass>com.finnlytics.wick.oracle.Main</mainClass>
+                </transformer>
+              </transformers>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  <repositories>
+    <repository>
+      <releases />
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <id>eclipse-leshan-releases</id>
+      <url>https://repo.eclipse.org/content/repositories/leshan-releases/</url>
+    </repository>
+  </repositories>
+  <properties>
+    <maven.compiler.release>17</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <leshan.version>2.0.0-M18</leshan.version>
+  </properties>
+</project>

@@ -1,0 +1,7 @@
+{
+  "description": "Two-record pack mixing string and integer values",
+  "records": [
+    { "name": "/3/0/0", "string_value": "Manufacturer" },
+    { "name": "/3/0/9", "number_value": 87 }
+  ]
+}

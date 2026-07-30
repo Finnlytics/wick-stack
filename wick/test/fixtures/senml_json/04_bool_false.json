@@ -1,0 +1,6 @@
+{
+  "description": "Single boolean-false record /3303/0/5601",
+  "records": [
+    { "name": "/3303/0/5601", "boolean_value": false }
+  ]
+}

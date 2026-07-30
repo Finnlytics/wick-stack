@@ -1,0 +1,6 @@
+{
+  "description": "base_name + name combo, integer value",
+  "records": [
+    { "base_name": "/3/0/", "name": "9", "number_value": 87 }
+  ]
+}

@@ -1,0 +1,18 @@
+# Build artefacts
+/_build/
+/cover/
+/deps/
+/doc/
+erl_crash.dump
+*.ez
+*.beam
+
+# Mix
+.elixir_ls/
+/config/*.secret.exs
+
+# OS / editor
+.DS_Store
+.vscode/
+*.swp
+*~

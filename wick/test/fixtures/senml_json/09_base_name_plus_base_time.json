@@ -1,0 +1,11 @@
+{
+  "description": "base_name + base_time + name + integer value",
+  "records": [
+    {
+      "base_name": "/3/0/",
+      "base_time": 1700000000,
+      "name": "9",
+      "number_value": 87
+    }
+  ]
+}
