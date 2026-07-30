@@ -15,7 +15,7 @@ Eclipse uses the same architecture: **Californium** is a standalone CoAP library
 
 ## Decision
 
-CoAP wire format and (eventually) runtime live in a **new sibling library [`wick_coap`](https://github.com/Finnlytics/wick_coap)**. It is its own Mix project, its own Hex package shape, its own decision log.
+CoAP wire format and (eventually) runtime live in a **new sibling library [`wick_coap`](../../../wick_coap)**. It is its own Mix project, its own Hex package shape, its own decision log.
 
 `wick_coap` has **no runtime dependency on Wick.** Pure CoAP — generic, reusable for non-LwM2M applications. The LwM2M-specific binding (e.g. mapping CoAP `2.05 Content` to `Wick.Status.content`) lives in either Wick itself or a future gateway service that depends on both.
 
@@ -41,6 +41,8 @@ CoAP wire format and (eventually) runtime live in a **new sibling library [`wick
 1. **`wick_coap` — CoAP message wire format (encode/decode)** — current milestone. Mirror of Wick's "encode-first, decode-second" approach: get the wire bytes right, then add the runtime (retransmission, deduplication, block-wise reassembly, observe relations).
 2. **`wick_coap` runtime** — retransmit/dedup state machines, block-wise transfer engine, observe relation tracking. A later milestone.
 3. **Demo server + demo client** — minimal end-to-end LwM2M exchange. Wires Wick + wick_coap + OTP `:ssl` (DTLS) + an in-memory ETS-backed registration store. Confirms the libraries work together; doubles as reference implementation for downstream consumers.
+
+> **Status note, 2026-07-30.** All three milestones are complete; this section is kept as written for the record. The demo server and client now cover all four LwM2M interfaces and exercise each other over real UDP, and the server carries a browser UI. Two things turned out differently from the sketch above: the registration store is a plain immutable structure rather than ETS-backed ([ADR 0007](0007-in-memory-stores-as-pure-data.md)), and the transport boundary settled on CoAP option numbers rather than the raw Content-Format integers anticipated in the Neutral section below ([ADR 0005](0005-coap-option-tuples-at-the-wick-boundary.md)). The two libraries also now share one repository while remaining separate packages ([ADR 0006](0006-single-repository-for-the-wick-stack.md)), which supersedes the "two libraries to version, publish, and CI" consequence only in its repository count — the packaging consequence stands.
 
 ## References
 

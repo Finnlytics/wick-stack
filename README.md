@@ -83,7 +83,29 @@ Pinned per project in `.tool-versions` for [asdf](https://asdf-vm.com) / [mise](
 
 ## Decisions
 
-Load-bearing technical choices are recorded as ADRs in [`wick/docs/decisions/`](wick/docs/decisions/), with the *why* behind each. Start with [0001 (zero runtime dependencies)](wick/docs/decisions/0001-zero-runtime-dependencies.md) and [0004 (the Wick/WickCoap split)](wick/docs/decisions/0004-wick-coap-as-sibling-library.md).
+Load-bearing technical choices are recorded as ADRs, with the *why* behind each. Each library keeps its own log, numbered separately, and both are published with the library's docs.
+
+**[`wick/docs/decisions/`](wick/docs/decisions/)**
+
+| # | Title |
+|---|-------|
+| [0001](wick/docs/decisions/0001-zero-runtime-dependencies.md) | Zero runtime dependencies |
+| [0002](wick/docs/decisions/0002-oracle-pinned-to-leshan-2x.md) | Oracle pinned to Leshan 2.0.0-M18 |
+| [0003](wick/docs/decisions/0003-time-fields-as-plain-numbers.md) | SenML time fields as plain numbers |
+| [0004](wick/docs/decisions/0004-wick-coap-as-sibling-library.md) | `wick_coap` as a sibling library |
+| [0005](wick/docs/decisions/0005-coap-option-tuples-at-the-wick-boundary.md) | CoAP option numbers as the transport boundary |
+| [0006](wick/docs/decisions/0006-single-repository-for-the-wick-stack.md) | One repository for the Wick stack |
+| [0007](wick/docs/decisions/0007-in-memory-stores-as-pure-data.md) | In-memory stores as pure data, not processes |
+
+**[`wick_coap/docs/decisions/`](wick_coap/docs/decisions/)**
+
+| # | Title |
+|---|-------|
+| [0001](wick_coap/docs/decisions/0001-hand-written-coap-rather-than-forking.md) | Hand-written CoAP, rather than forking |
+| [0002](wick_coap/docs/decisions/0002-dtls-via-otp-ssl.md) | DTLS via OTP `:ssl`, accepting two missing extensions |
+| [0003](wick_coap/docs/decisions/0003-observe-relations-keyed-by-path.md) | Observe relations keyed by `{peer, uri_path}` |
+
+If you read only two: [Wick 0004](wick/docs/decisions/0004-wick-coap-as-sibling-library.md) explains why there are two libraries, and [Wick 0005](wick/docs/decisions/0005-coap-option-tuples-at-the-wick-boundary.md) explains how they meet without depending on each other.
 
 ## License
 

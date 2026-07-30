@@ -172,7 +172,7 @@ Both gaps are tracked. If the constraint becomes painful, swap OTP `:ssl` for a 
 
 ## Decisions
 
-- The architectural split between Wick and WickCoap is documented in [Wick ADR 0004](https://github.com/Finnlytics/wick/blob/main/docs/decisions/0004-wick-coap-as-sibling-library.md).
+- The architectural split between Wick and WickCoap is documented in [Wick ADR 0004](../wick/docs/decisions/0004-wick-coap-as-sibling-library.md).
 - Future WickCoap-specific decisions live in [docs/decisions/](docs/decisions/).
 
 ## License

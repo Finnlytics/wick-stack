@@ -27,3 +27,6 @@ Don't rewrite history. If a decision is wrong, write a new ADR that supersedes t
 | [0004](0004-wick-coap-as-sibling-library.md) | `wick_coap` as a sibling library, not a Wick module | Accepted |
 | [0005](0005-coap-option-tuples-at-the-wick-boundary.md) | CoAP option *numbers* are the Wick/transport boundary | Accepted |
 | [0006](0006-single-repository-for-the-wick-stack.md) | One repository for the Wick stack | Accepted |
+| [0007](0007-in-memory-stores-as-pure-data.md) | In-memory stores ship as pure data, not processes | Accepted |
+
+WickCoap keeps its own log, numbered separately, at [`../../../wick_coap/docs/decisions/`](../../../wick_coap/docs/decisions/).

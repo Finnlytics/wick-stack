@@ -2,13 +2,13 @@
 
 LwM2M protocol primitives for Elixir.
 
-Wick is a library — codecs, Object Model, path resolution, request/response types, registration interface — for building [Lightweight M2M](https://www.openmobilealliance.org/release/LightweightM2M/) servers, clients, and tooling on the BEAM. It deliberately ships **no transport** (no UDP, DTLS, CoAP runtime) and **no running processes**: every module is either pure data or pure functions over data. The consumer service is responsible for transport (the sibling [`wick_coap`](https://github.com/Finnlytics/wick_coap) library), state ownership (Agents / GenServers / a database), and life-cycle policy.
+Wick is a library — codecs, Object Model, path resolution, request/response types, registration interface — for building [Lightweight M2M](https://www.openmobilealliance.org/release/LightweightM2M/) servers, clients, and tooling on the BEAM. It deliberately ships **no transport** (no UDP, DTLS, CoAP runtime) and **no running processes**: every module is either pure data or pure functions over data. The consumer service is responsible for transport (the sibling [`wick_coap`](../wick_coap) library), state ownership (Agents / GenServers / a database), and life-cycle policy.
 
 The library is informed by [Eclipse Leshan](https://eclipse.dev/leshan/) — Java's reference LwM2M implementation — and uses Leshan as a test oracle for codec correctness.
 
 ## Status
 
-Pre-release, but functionally complete for LwM2M 1.2: **all four interfaces** are implemented in both directions and tested end-to-end over real CoAP/UDP against [`wick_coap`](https://github.com/Finnlytics/wick_coap).
+Pre-release, but functionally complete for LwM2M 1.2: **all four interfaces** are implemented in both directions and tested end-to-end over real CoAP/UDP against [`wick_coap`](../wick_coap).
 
 - **Codecs**: SenML CBOR / JSON, Plain Text, Opaque (all bidirectional, oracle-verified against Leshan 2.0.0-M18).
 - **Object Model**: DDF XML parser, in-memory Object Registry (definitions) and Object Tree (values).

@@ -9,9 +9,12 @@ defmodule Wick.Registration.Store do
   is supported because LwM2M allows at most one active registration per endpoint name
   (a fresh Register from a known endpoint replaces the old record).
 
-  Storage is intentionally minimal: just enough for the registration interface tests.
-  Production deployments swap this out for a persistent store backed by Postgres or
-  similar — see ADR (TBD) for the boundary between library and platform.
+  Storage is intentionally minimal, and **this is not production storage**: it is in-memory,
+  single-node, and lives as long as whatever holds the struct. Production deployments replace
+  it with a persistent store — see
+  [ADR 0007](../../docs/decisions/0007-in-memory-stores-as-pure-data.md) for why Wick ships a
+  pure data structure here rather than a process or a behaviour, and where the boundary between
+  library and platform falls.
   """
 
   alias Wick.Registration.Record

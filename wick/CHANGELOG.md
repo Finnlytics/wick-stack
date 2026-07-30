@@ -30,5 +30,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Changed
 - **Breaking:** `Wick.Registration.Wire` is now `Wick.Wire`, and `Wick.Registration.to_wire/1` returns a `%Wick.Wire{}`. Both libraries are pre-release and unpublished on Hex, so this affects only code tracking `main`; the fix is the rename plus dropping any hand-rolled option-building in favour of `Wick.Wire.to_coap_options/1`.
 - `Wick.Request.ReadComposite` and `Wick.Request.ObserveComposite` gained a `:content_format` field (defaulting to SenML CBOR, `112`) describing the *request body*, distinct from `:accept_content_format`, which asks for a format on the response. `to_wire/1` now encodes the path list itself rather than leaving it to the caller.
+- Wick and WickCoap now share one repository while remaining separate packages — see [ADR 0006](docs/decisions/0006-single-repository-for-the-wick-stack.md). The `wick_coap` test dependency is a plain relative path; the GitHub fallback is gone, since it was the reason CI could never test a change spanning both libraries.
 
-[Unreleased]: https://github.com/finnlytics/wick/compare/HEAD...HEAD
+### Documentation
+- The decision records are now published with the docs. They were previously repository-only, which made the *why* behind the library invisible to anyone reading it on HexDocs.
+- New [ADR 0007](docs/decisions/0007-in-memory-stores-as-pure-data.md) — why `Wick.Registration.Store`, `Wick.Observation.Store`, and `Wick.Object.Tree` ship as pure data rather than processes or behaviours, and where the library/platform boundary falls. `Wick.Registration.Store` previously pointed at "ADR (TBD)" for this.
+- ADR 0004 carries a dated status note: all three of its sequenced milestones are complete, and two of them landed differently from the sketch.
+- Module groups on HexDocs are now pattern-based, so a new operation struct is grouped rather than falling into an ungrouped pile. Twenty-five modules were previously ungrouped.
+
+[Unreleased]: https://github.com/Finnlytics/wick-stack/compare/HEAD...HEAD

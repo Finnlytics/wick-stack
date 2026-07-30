@@ -2,7 +2,11 @@ defmodule WickCoap.MixProject do
   use Mix.Project
 
   @version "0.1.0-dev"
-  @source_url "https://github.com/finnlytics/wick_coap"
+
+  # One repository, two packages (Wick ADR 0006). `@source_root` is this package's directory
+  # within it; ExDoc needs it in `source_url_pattern` or every "source" link on hexdocs 404s.
+  @source_url "https://github.com/Finnlytics/wick-stack"
+  @source_root "wick_coap"
 
   def project do
     [
@@ -52,8 +56,8 @@ defmodule WickCoap.MixProject do
   defp deps do
     [
       # Zero runtime dependencies — every wire format we ship is hand-written against the
-      # relevant RFC. See Wick ADR 0001 for the rationale; the same reasoning carries over:
-      # https://github.com/Finnlytics/wick/blob/main/docs/decisions/0001-zero-runtime-dependencies.md
+      # relevant RFC. The reasoning is recorded in docs/decisions/0001, which also covers why
+      # this was written rather than forked from gen_coap or the EMQX fork.
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.34", only: :dev, runtime: false},
@@ -78,8 +82,11 @@ defmodule WickCoap.MixProject do
     [
       maintainers: ["Finnlytics"],
       licenses: ["Apache-2.0"],
-      links: %{"GitHub" => @source_url},
-      files: ~w(lib mix.exs README.md CHANGELOG.md LICENSE .formatter.exs)
+      links: %{
+        "GitHub" => @source_url,
+        "Changelog" => "#{@source_url}/blob/main/#{@source_root}/CHANGELOG.md"
+      },
+      files: ~w(lib docs mix.exs README.md CHANGELOG.md LICENSE .formatter.exs)
     ]
   end
 
@@ -90,11 +97,48 @@ defmodule WickCoap.MixProject do
   defp docs do
     [
       main: "readme",
-      extras: [
-        "README.md",
-        "CHANGELOG.md"
+      extras:
+        [
+          "README.md",
+          "CHANGELOG.md"
+        ] ++ Path.wildcard("docs/decisions/0*.md"),
+      groups_for_extras: [
+        "Decision records": Path.wildcard("docs/decisions/0*.md")
       ],
-      source_ref: "v#{@version}"
+      source_ref: "v#{@version}",
+      source_url_pattern: "#{@source_url}/blob/main/#{@source_root}/%{path}#L%{line}",
+      groups_for_modules: [
+        Runtime: [
+          WickCoap.Endpoint,
+          WickCoap.Handler
+        ],
+        "Wire format": [
+          WickCoap.Message,
+          WickCoap.Code,
+          WickCoap.Option,
+          WickCoap.Error
+        ],
+        "Reliability (RFC 7252)": [
+          WickCoap.Exchange,
+          WickCoap.Retransmit,
+          WickCoap.Dedup,
+          WickCoap.MessageId,
+          WickCoap.Token
+        ],
+        "Block-wise transfer (RFC 7959)": [
+          WickCoap.Block,
+          WickCoap.BlockSender,
+          WickCoap.BlockReceiver
+        ],
+        "Observe (RFC 7641)": [
+          WickCoap.Observe,
+          WickCoap.ObserveRelation
+        ],
+        "DTLS internals": [
+          WickCoap.DtlsAcceptor,
+          WickCoap.DtlsDemux
+        ]
+      ]
     ]
   end
 end

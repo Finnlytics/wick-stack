@@ -2,7 +2,13 @@ defmodule Wick.MixProject do
   use Mix.Project
 
   @version "0.1.0-dev"
-  @source_url "https://github.com/finnlytics/wick"
+
+  # Both libraries live in one repository (ADR 0006), so the source URL is the repository and
+  # `@source_root` is this package's directory within it. ExDoc needs the two separately:
+  # without the directory prefix in `source_url_pattern`, every "source" link on hexdocs
+  # resolves to a path that does not exist.
+  @source_url "https://github.com/Finnlytics/wick-stack"
+  @source_root "wick"
 
   def project do
     [
@@ -69,21 +75,21 @@ defmodule Wick.MixProject do
       {:excoveralls, "~> 0.18", only: :test},
       {:stream_data, "~> 1.1", only: [:dev, :test]},
       {:jason, "~> 1.4", only: [:dev, :test]},
-      # wick_coap is the sibling transport library. Test-only — the registration
-      # integration test exercises Wick + WickCoap end-to-end. Wick still has zero
-      # runtime deps in production. Uses a local path dep when checked out alongside
-      # wick_coap (local dev); falls back to the GitHub source in CI.
+      # wick_coap is the sibling transport library. Test-only — the integration tests exercise
+      # Wick and WickCoap end-to-end over real CoAP/UDP. Wick still has zero runtime deps, and
+      # this dependency never reaches a consumer: `only: :test`, and the package `files` list
+      # excludes `test/`.
       {:wick_coap, wick_coap_source()}
     ]
   end
 
-  defp wick_coap_source do
-    if File.exists?("../wick_coap/mix.exs") do
-      [path: "../wick_coap", only: :test]
-    else
-      [github: "Finnlytics/wick_coap", branch: "main", only: :test]
-    end
-  end
+  # A plain relative path. It used to fall back to fetching wick_coap from GitHub when the
+  # sibling directory was absent, which was necessary when the two lived in separate
+  # repositories — and was also the reason CI could never test a change spanning both, since it
+  # resolved whatever `main` happened to be rather than the commit under test. One repository
+  # (ADR 0006) makes the sibling guaranteed, so the fallback is gone rather than left as dead
+  # code that would silently resolve a stale published copy.
+  defp wick_coap_source, do: [path: "../wick_coap", only: :test]
 
   defp aliases do
     [
@@ -101,8 +107,13 @@ defmodule Wick.MixProject do
     [
       maintainers: ["Finnlytics"],
       licenses: ["Apache-2.0"],
-      links: %{"GitHub" => @source_url},
-      files: ~w(lib priv mix.exs README.md CHANGELOG.md LICENSE .formatter.exs)
+      links: %{
+        "GitHub" => @source_url,
+        "Changelog" => "#{@source_url}/blob/main/#{@source_root}/CHANGELOG.md"
+      },
+      # `docs` is included so the ADRs travel with the package and `mix docs` works from a
+      # fetched tarball rather than silently dropping every extra.
+      files: ~w(lib priv docs mix.exs README.md CHANGELOG.md LICENSE .formatter.exs)
     ]
   end
 
@@ -113,26 +124,32 @@ defmodule Wick.MixProject do
   defp docs do
     [
       main: "readme",
-      extras: [
-        "README.md",
-        "CHANGELOG.md"
+      # The ADRs are the best explanation of *why* the library is shaped the way it is, and
+      # leaving them out of the published docs made them invisible to anyone who had not cloned
+      # the repository.
+      extras:
+        [
+          "README.md",
+          "CHANGELOG.md"
+        ] ++ Path.wildcard("docs/decisions/0*.md"),
+      groups_for_extras: [
+        "Decision records": Path.wildcard("docs/decisions/0*.md")
       ],
       source_ref: "v#{@version}",
+      source_url_pattern: "#{@source_url}/blob/main/#{@source_root}/%{path}#L%{line}",
+      # Patterns rather than explicit lists: each LwM2M operation is its own nested struct
+      # (`Wick.Request.Read`, `Wick.Bootstrap.Write`, …), and enumerating them meant a new
+      # operation silently landed in an ungrouped pile. ExDoc matches a regex against the
+      # module id, so the prefix does the work.
       groups_for_modules: [
-        Codecs: [
-          Wick.Codec,
-          Wick.Codec.SenmlCbor
-        ],
-        "Object Model": [
-          Wick.Object.Definition,
-          Wick.Object.Resource,
-          Wick.Object.Registry
-        ],
-        Types: [
-          Wick.Path,
-          Wick.Value,
-          Wick.Error
-        ]
+        Interfaces: [~r/^Wick\.(Bootstrap|Registration|Request|Response|Uplink)($|\.)/],
+        "Information Reporting": [Wick.Attributes, ~r/^Wick\.Observation($|\.)/],
+        Transport: [~r/^Wick\.Wire($|\.)/, Wick.Status],
+        Codecs: [~r/^Wick\.(Codec|Senml|CoreLink)($|\.)/],
+        "Object Model": [~r/^Wick\.Object($|\.)/],
+        Types: [Wick.Path, Wick.Value, Wick.Error]
+        # No group for Wick.Cbor / Wick.Json: both are `@moduledoc false` internals, so ExDoc
+        # never surfaces them and a group here would be dead config.
       ]
     ]
   end
