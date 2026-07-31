@@ -40,18 +40,14 @@ defmodule Wick.Object.Resource do
       false
   """
 
-  @typedoc "An LwM2M Resource value type (per OMA LwM2M 1.2 §7.4)."
-  @type value_type ::
-          :string
-          | :integer
-          | :unsigned_integer
-          | :float
-          | :boolean
-          | :opaque
-          | :time
-          | :objlnk
-          | :corelnk
-          | :none
+  @typedoc """
+  An LwM2M Resource value type (per OMA LwM2M 1.2 §7.4).
+
+  An alias for `t:Wick.Value.type/0` rather than a second list of atoms — the type a DDF
+  *declares* and the type a value *carries* are the same vocabulary, and `Wick.Model` maps
+  between the two layers. Keeping one definition is what stops them drifting.
+  """
+  @type value_type :: Wick.Value.type()
 
   @typedoc "An operation a server may perform on this Resource."
   @type operation :: :read | :write | :execute

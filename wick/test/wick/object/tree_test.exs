@@ -370,4 +370,151 @@ defmodule Wick.Object.TreeTest do
       assert Tree.apply_pack(tree, Pack.new([])) == {:ok, tree}
     end
   end
+
+  describe "apply_pack/3 with a :model" do
+    test "recovers the types SenML cannot express" do
+      pack =
+        Pack.new([
+          %Record{name: "/7/0/0", number_value: 1_700_000_000},
+          %Record{name: "/7/0/1", number_value: 42},
+          %Record{name: "/7/0/2", string_value: "</3/0>"}
+        ])
+
+      assert {:ok, tree} = Tree.apply_pack(Tree.new(), pack, model: model())
+
+      assert Tree.fetch(tree, path!("/7/0/0")) == {:ok, {:time, 1_700_000_000}}
+      assert Tree.fetch(tree, path!("/7/0/1")) == {:ok, {:unsigned_integer, 42}}
+      assert Tree.fetch(tree, path!("/7/0/2")) == {:ok, {:core_link, "</3/0>"}}
+    end
+
+    test "without a model the same pack narrows to the wire shape" do
+      pack =
+        Pack.new([
+          %Record{name: "/7/0/0", number_value: 1_700_000_000},
+          %Record{name: "/7/0/2", string_value: "</3/0>"}
+        ])
+
+      assert {:ok, tree} = Tree.apply_pack(Tree.new(), pack)
+
+      assert Tree.fetch(tree, path!("/7/0/0")) == {:ok, {:integer, 1_700_000_000}}
+      assert Tree.fetch(tree, path!("/7/0/2")) == {:ok, {:string, "</3/0>"}}
+    end
+
+    test "a Float Resource accepts a whole number and widens it" do
+      pack = Pack.new([%Record{name: "/7/0/3", number_value: 22}])
+
+      assert {:ok, tree} = Tree.apply_pack(Tree.new(), pack, model: model())
+      assert Tree.fetch(tree, path!("/7/0/3")) == {:ok, {:float, 22.0}}
+    end
+
+    test "an Integer Resource does not accept a float" do
+      pack = Pack.new([%Record{name: "/7/0/4", number_value: 22.5}])
+
+      assert {:error, err} = Tree.apply_pack(Tree.new(), pack, model: model())
+      assert err.code == :type_mismatch
+    end
+
+    test "a string sent to a numeric Resource is a type mismatch, not a silent store" do
+      pack = Pack.new([%Record{name: "/7/0/1", string_value: "forty-two"}])
+
+      assert {:error, err} = Tree.apply_pack(Tree.new(), pack, model: model())
+      assert err.code == :type_mismatch
+      assert err.meta.path == "/7/0/1"
+      assert err.meta.declared == :unsigned_integer
+      assert err.meta.actual == :string
+      assert err.message =~ "declared :unsigned_integer"
+    end
+
+    test "a negative value for an Unsigned Integer Resource is rejected" do
+      pack = Pack.new([%Record{name: "/7/0/1", number_value: -1}])
+
+      assert {:error, %{code: :type_mismatch}} = Tree.apply_pack(Tree.new(), pack, model: model())
+    end
+
+    test "a Resource the model does not know falls back to wire-shape inference" do
+      pack = Pack.new([%Record{name: "/7/0/999", number_value: 5}])
+
+      assert {:ok, tree} = Tree.apply_pack(Tree.new(), pack, model: model())
+      assert Tree.fetch(tree, path!("/7/0/999")) == {:ok, {:integer, 5}}
+    end
+
+    test "a Resource Instance resolves through its parent Resource" do
+      pack = Pack.new([%Record{name: "/7/0/5/0", number_value: 1_700_000_000}])
+
+      assert {:ok, tree} = Tree.apply_pack(Tree.new(), pack, model: model())
+      assert Tree.fetch(tree, path!("/7/0/5/0")) == {:ok, {:time, 1_700_000_000}}
+    end
+
+    test "base and model combine" do
+      pack = Pack.new([%Record{name: "0", number_value: 1_700_000_000}])
+
+      assert {:ok, tree} =
+               Tree.apply_pack(Tree.new(), pack, base: path!("/7/0"), model: model())
+
+      assert Tree.fetch(tree, path!("/7/0/0")) == {:ok, {:time, 1_700_000_000}}
+    end
+
+    test "a positional base still works" do
+      pack = Pack.new([%Record{name: "9", number_value: 1}])
+
+      assert {:ok, tree} = Tree.apply_pack(Tree.new(), pack, path!("/3/0"))
+      assert Tree.fetch(tree, path!("/3/0/9")) == {:ok, {:integer, 1}}
+    end
+  end
+
+  describe "to_pack/2 with a Time Resource" do
+    test "an epoch integer encodes as a number" do
+      tree = Tree.from_map(%{7 => %{0 => %{0 => {:time, 1_700_000_000}}}})
+
+      assert [%Record{name: "/7/0/0", number_value: 1_700_000_000}] =
+               Tree.to_pack(tree, [path!("/7/0")]).records
+    end
+
+    test "a DateTime names the mistake instead of failing inside the codec" do
+      tree = Tree.from_map(%{7 => %{0 => %{0 => {:time, ~U[2026-07-31 12:00:00Z]}}}})
+
+      assert_raise ArgumentError, ~r/Time is an integer count of seconds/, fn ->
+        Tree.to_pack(tree, [path!("/7/0")])
+      end
+    end
+
+    test "a Time Resource survives a full round-trip with a model" do
+      tree = Tree.from_map(%{7 => %{0 => %{0 => {:time, 1_700_000_000}}}})
+      pack = Tree.to_pack(tree, [path!("/7/0")])
+
+      assert {:ok, rebuilt} = Tree.apply_pack(Tree.new(), pack, model: model())
+      assert Tree.subtree(rebuilt, path!("/7/0")) == Tree.subtree(tree, path!("/7/0"))
+    end
+  end
+
+  # A synthetic Object exercising every type SenML cannot express on its own.
+  defp model do
+    resource = fn id, type, multiplicity ->
+      %Wick.Object.Resource{
+        resource_id: id,
+        name: "Resource #{id}",
+        type: type,
+        operations: [:read, :write],
+        multiple_instances: multiplicity,
+        mandatory: :optional
+      }
+    end
+
+    Wick.Object.Registry.from_definitions([
+      %Wick.Object.Definition{
+        object_id: 7,
+        name: "Test",
+        multiple_instances: :single,
+        mandatory: :optional,
+        resources: [
+          resource.(0, :time, :single),
+          resource.(1, :unsigned_integer, :single),
+          resource.(2, :core_link, :single),
+          resource.(3, :float, :single),
+          resource.(4, :integer, :single),
+          resource.(5, :time, :multiple)
+        ]
+      }
+    ])
+  end
 end

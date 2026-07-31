@@ -162,7 +162,7 @@ defmodule Wick.Object.Ddf do
   defp parse_type("Opaque"), do: :opaque
   defp parse_type("Time"), do: :time
   defp parse_type("Objlnk"), do: :objlnk
-  defp parse_type("Corelnk"), do: :corelnk
+  defp parse_type("Corelnk"), do: :core_link
   defp parse_type(other), do: raise("unknown DDF Type: #{inspect(other)}")
 
   defp parse_operations(nil), do: []

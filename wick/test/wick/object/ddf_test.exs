@@ -281,7 +281,7 @@ defmodule Wick.Object.DdfTest do
       assert [
                %Resource{type: :boolean, operations: [:read, :write]},
                %Resource{type: :unsigned_integer, operations: [:read]},
-               %Resource{type: :corelnk, multiple_instances: :multiple}
+               %Resource{type: :core_link, multiple_instances: :multiple}
              ] = definition.resources
     end
 
