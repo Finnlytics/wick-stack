@@ -1,0 +1,10 @@
+{
+  "description": "Device Object Instance: string, integer and time resources on an Object Instance path",
+  "path": "/3/0",
+  "object_id": 3,
+  "resources": [
+    {"id": 0, "type": "STRING", "value": "Open Mobile Alliance"},
+    {"id": 9, "type": "INTEGER", "value": 87},
+    {"id": 13, "type": "TIME", "value": 1367491215}
+  ]
+}

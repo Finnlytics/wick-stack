@@ -1,0 +1,8 @@
+{
+  "description": "A Resource ID past 255, forcing the 16-bit identifier form",
+  "path": "/9/0",
+  "object_id": 9,
+  "resources": [
+    {"id": 300, "type": "INTEGER", "value": 1}
+  ]
+}

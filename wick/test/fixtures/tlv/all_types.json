@@ -1,0 +1,16 @@
+{
+  "description": "Every LwM2M data type in one Object Instance",
+  "path": "/9/0",
+  "object_id": 9,
+  "resources": [
+    {"id": 0, "type": "STRING", "value": "hello"},
+    {"id": 1, "type": "INTEGER", "value": 87},
+    {"id": 2, "type": "FLOAT", "value": 22.5},
+    {"id": 3, "type": "BOOLEAN", "value": true},
+    {"id": 4, "type": "OPAQUE", "value": "DEADBEEF"},
+    {"id": 5, "type": "TIME", "value": 1700000000},
+    {"id": 6, "type": "OBJLNK", "value": "3:0"},
+    {"id": 7, "type": "UNSIGNED_INTEGER", "value": 200},
+    {"id": 8, "type": "CORELINK", "value": "</3/0>"}
+  ]
+}

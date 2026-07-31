@@ -14,6 +14,12 @@ defmodule Wick.Codec do
   | `Wick.Codec.Opaque`     | `42`           | `application/octet-stream` |
   | `Wick.Codec.SenmlJson`  | `110`          | [RFC 8428](https://www.rfc-editor.org/rfc/rfc8428) |
   | `Wick.Codec.SenmlCbor`  | `112`          | [RFC 8428](https://www.rfc-editor.org/rfc/rfc8428) |
+  | `Wick.Codec.Tlv`        | `11542`        | `application/vnd.oma.lwm2m+tlv` |
+
+  `Wick.Codec.Tlv` needs more than a payload: TLV carries no names, so `encode/2` and
+  `decode/2` require a `:path`, and typing values needs a `:model`. Resolving a
+  Content-Format to a module is still the same call; supplying its options is the caller's
+  job.
 
   `for_content_format/1` resolves a Content-Format integer to its module, which is what a
   request handler needs when it has to decode a payload whose format the peer chose.
@@ -53,7 +59,8 @@ defmodule Wick.Codec do
     {0, Wick.Codec.PlainText},
     {42, Wick.Codec.Opaque},
     {110, Wick.Codec.SenmlJson},
-    {112, Wick.Codec.SenmlCbor}
+    {112, Wick.Codec.SenmlCbor},
+    {11_542, Wick.Codec.Tlv}
   ]
 
   @doc """
@@ -67,6 +74,9 @@ defmodule Wick.Codec do
 
       iex> Wick.Codec.for_content_format(0)
       Wick.Codec.PlainText
+
+      iex> Wick.Codec.for_content_format(11_542)
+      Wick.Codec.Tlv
 
       iex> Wick.Codec.for_content_format(11_543)
       nil
@@ -86,7 +96,7 @@ defmodule Wick.Codec do
   ## Examples
 
       iex> Wick.Codec.content_formats()
-      [0, 42, 110, 112]
+      [0, 42, 110, 112, 11542]
   """
   @spec content_formats() :: [non_neg_integer()]
   def content_formats, do: Enum.map(@registry, &elem(&1, 0))

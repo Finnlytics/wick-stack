@@ -30,6 +30,7 @@ defmodule Wick.Test.CoapDeviceHandler do
   alias Wick.Attributes
   alias Wick.Codec.PlainText
   alias Wick.Codec.SenmlCbor
+  alias Wick.Codec.Tlv
   alias Wick.CoreLink
   alias Wick.Object.Tree
   alias Wick.Path
@@ -43,6 +44,7 @@ defmodule Wick.Test.CoapDeviceHandler do
 
   @senml_cbor 112
   @plain_text 0
+  @tlv 11_542
 
   # ── Setup helpers ──────────────────────────────────────────────────────────
 
@@ -70,7 +72,7 @@ defmodule Wick.Test.CoapDeviceHandler do
   @spec notify(pid(), pid(), Path.t()) :: non_neg_integer()
   def notify(endpoint, device, %Path{} = path) do
     tree = tree(device)
-    {content_format, payload} = encode_read(tree, path, @senml_cbor)
+    {content_format, payload} = encode_read(tree, path, @senml_cbor, nil)
 
     template = %Message{
       type: :non,
@@ -87,11 +89,13 @@ defmodule Wick.Test.CoapDeviceHandler do
   # ── Handler ────────────────────────────────────────────────────────────────
 
   @impl WickCoap.Handler
-  def handle_request(%Message{} = message, _peer, %{device: device}) do
+  def handle_request(%Message{} = message, _peer, %{device: device} = state) do
+    model = Map.get(state, :model)
+
     response =
       with {:ok, wire} <- parse(message),
            {:ok, request} <- Request.from_wire(wire) do
-        Agent.get_and_update(device, fn tree -> dispatch(request, tree) end)
+        Agent.get_and_update(device, fn tree -> dispatch(request, tree, model) end)
       else
         {:error, error} -> Response.error(:bad_request, error.message)
       end
@@ -106,10 +110,10 @@ defmodule Wick.Test.CoapDeviceHandler do
 
   # ── Dispatch — the only LwM2M application logic in this module ─────────────
 
-  defp dispatch(%Request.Read{} = request, tree) do
+  defp dispatch(%Request.Read{} = request, tree, model) do
     if Tree.exists?(tree, request.path) do
       {content_format, payload} =
-        encode_read(tree, request.path, request.accept_content_format || @senml_cbor)
+        encode_read(tree, request.path, request.accept_content_format || @senml_cbor, model)
 
       {Response.content(content_format, payload), tree}
     else
@@ -118,25 +122,29 @@ defmodule Wick.Test.CoapDeviceHandler do
   end
 
   # Observe answers exactly as a Read does; the Endpoint adds the Observe option.
-  defp dispatch(%Request.Observe{} = request, tree) do
+  defp dispatch(%Request.Observe{} = request, tree, model) do
     dispatch(
       %Request.Read{path: request.path, accept_content_format: request.accept_content_format},
-      tree
+      tree,
+      model
     )
   end
 
-  defp dispatch(%Request.CancelObserve{} = request, tree) do
-    dispatch(%Request.Read{path: request.path}, tree)
+  defp dispatch(%Request.CancelObserve{} = request, tree, model) do
+    dispatch(%Request.Read{path: request.path}, tree, model)
   end
 
-  defp dispatch(%Request.Write{} = request, tree) do
-    case decode_write(request.content_format, request.payload, request.path) do
-      {:ok, value_or_pack} -> {Response.changed(), apply_write(tree, request.path, value_or_pack)}
-      {:error, error} -> {Response.error(:bad_request, error.message), tree}
+  defp dispatch(%Request.Write{} = request, tree, model) do
+    case decode_write(request.content_format, request.payload, request.path, model) do
+      {:ok, value_or_pack} ->
+        {Response.changed(), apply_write(tree, request.path, value_or_pack, model)}
+
+      {:error, error} ->
+        {Response.error(:bad_request, error.message), tree}
     end
   end
 
-  defp dispatch(%Request.WriteComposite{} = request, tree) do
+  defp dispatch(%Request.WriteComposite{} = request, tree, _model) do
     with {:ok, pack} <- SenmlCbor.decode(request.payload, []),
          {:ok, tree} <- Tree.apply_pack(tree, pack) do
       {Response.changed(), tree}
@@ -146,7 +154,7 @@ defmodule Wick.Test.CoapDeviceHandler do
   end
 
   # Execute has no value semantics here — record the invocation so a test can assert on it.
-  defp dispatch(%Request.Execute{} = request, tree) do
+  defp dispatch(%Request.Execute{} = request, tree, _model) do
     if Tree.exists?(tree, %{request.path | resource_id: nil}) do
       {Response.changed(), Tree.put(tree, request.path, {:string, request.arguments || ""})}
     else
@@ -154,7 +162,7 @@ defmodule Wick.Test.CoapDeviceHandler do
     end
   end
 
-  defp dispatch(%Request.Discover{} = request, tree) do
+  defp dispatch(%Request.Discover{} = request, tree, _model) do
     if Tree.exists?(tree, request.path) do
       payload = CoreLink.encode(Tree.discover(tree, request.path))
       {Response.content(CoreLink.content_format(), payload), tree}
@@ -163,7 +171,7 @@ defmodule Wick.Test.CoapDeviceHandler do
     end
   end
 
-  defp dispatch(%Request.Create{} = request, tree) do
+  defp dispatch(%Request.Create{} = request, tree, _model) do
     instance_id = Tree.next_instance_id(tree, request.path.object_id)
     location = %Path{object_id: request.path.object_id, object_instance_id: instance_id}
 
@@ -175,7 +183,7 @@ defmodule Wick.Test.CoapDeviceHandler do
     end
   end
 
-  defp dispatch(%Request.Delete{} = request, tree) do
+  defp dispatch(%Request.Delete{} = request, tree, _model) do
     if Tree.exists?(tree, request.path) do
       {Response.deleted(),
        Tree.delete_instance(tree, request.path.object_id, request.path.object_instance_id)}
@@ -184,7 +192,7 @@ defmodule Wick.Test.CoapDeviceHandler do
     end
   end
 
-  defp dispatch(%Request.WriteAttributes{} = request, tree) do
+  defp dispatch(%Request.WriteAttributes{} = request, tree, _model) do
     if Tree.exists?(tree, request.path) do
       {Response.changed(), Tree.put_attributes(tree, request.path, request.attributes)}
     else
@@ -192,49 +200,58 @@ defmodule Wick.Test.CoapDeviceHandler do
     end
   end
 
-  defp dispatch(%Request.ReadComposite{} = request, tree) do
+  defp dispatch(%Request.ReadComposite{} = request, tree, _model) do
     {:ok, encoded} = SenmlCbor.encode(Tree.to_pack(tree, request.paths), [])
     {Response.content(@senml_cbor, IO.iodata_to_binary(encoded)), tree}
   end
 
-  defp dispatch(%Request.ObserveComposite{} = request, tree) do
-    dispatch(%Request.ReadComposite{paths: request.paths}, tree)
+  defp dispatch(%Request.ObserveComposite{} = request, tree, model) do
+    dispatch(%Request.ReadComposite{paths: request.paths}, tree, model)
   end
 
   # ── Encoding ───────────────────────────────────────────────────────────────
 
   # A single Resource may go out as text/plain if that is what the server asked for;
   # anything wider is always a SenML Pack.
-  defp encode_read(tree, %Path{resource_id: rid} = path, @plain_text) when rid != nil do
+  defp encode_read(tree, %Path{} = path, @tlv, model) do
+    {:ok, encoded} = Tlv.encode(Tree.to_pack(tree, [path]), path: path, model: model)
+    {@tlv, IO.iodata_to_binary(encoded)}
+  end
+
+  defp encode_read(tree, %Path{resource_id: rid} = path, @plain_text, model) when rid != nil do
     case Tree.fetch(tree, path) do
       {:ok, value} ->
         {:ok, encoded} = PlainText.encode(value, [])
         {@plain_text, IO.iodata_to_binary(encoded)}
 
       :error ->
-        encode_read(tree, path, @senml_cbor)
+        encode_read(tree, path, @senml_cbor, model)
     end
   end
 
-  defp encode_read(tree, %Path{} = path, _content_format) do
+  defp encode_read(tree, %Path{} = path, _content_format, _model) do
     {:ok, encoded} = SenmlCbor.encode(Tree.to_pack(tree, [path]), [])
     {@senml_cbor, IO.iodata_to_binary(encoded)}
   end
 
-  defp decode_write(@plain_text, payload, _path), do: {:ok, {:plain, payload}}
+  defp decode_write(@plain_text, payload, _path, _model), do: {:ok, {:plain, payload}}
 
-  defp decode_write(_senml, payload, _path) do
+  defp decode_write(@tlv, payload, path, model) do
+    with {:ok, pack} <- Tlv.decode(payload, path: path, model: model), do: {:ok, {:pack, pack}}
+  end
+
+  defp decode_write(_senml, payload, _path, _model) do
     with {:ok, pack} <- SenmlCbor.decode(payload, []), do: {:ok, {:pack, pack}}
   end
 
-  defp apply_write(tree, path, {:plain, payload}) do
+  defp apply_write(tree, path, {:plain, payload}, _model) do
     # text/plain carries no type information; store it as a string and let the test assert
     # on the raw bytes. A real device consults its Object definition to coerce.
     Tree.put(tree, path, {:string, payload})
   end
 
-  defp apply_write(tree, path, {:pack, pack}) do
-    {:ok, tree} = Tree.apply_pack(tree, pack, path)
+  defp apply_write(tree, path, {:pack, pack}, model) do
+    {:ok, tree} = Tree.apply_pack(tree, pack, base: path, model: model)
     tree
   end
 

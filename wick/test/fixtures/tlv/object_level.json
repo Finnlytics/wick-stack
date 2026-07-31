@@ -1,0 +1,9 @@
+{
+  "description": "An Object path, so the payload is wrapped in an Object Instance entry",
+  "path": "/3",
+  "object_id": 3,
+  "resources": [
+    {"id": 0, "type": "STRING", "value": "ACME"},
+    {"id": 9, "type": "INTEGER", "value": 87}
+  ]
+}

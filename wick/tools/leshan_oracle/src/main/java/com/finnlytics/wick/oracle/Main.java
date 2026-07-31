@@ -77,7 +77,7 @@ public final class Main {
 
     public static void main(final String[] args) throws Exception {
         if (args.length != 2 || !Mode.isValid(args[0])) {
-            System.err.println("usage: leshan-oracle <cbor|json> <fixtures-dir>");
+            System.err.println("usage: leshan-oracle <cbor|json|tlv> <fixtures-dir>");
             System.exit(2);
         }
 
@@ -109,14 +109,22 @@ public final class Main {
             Path binFile = jsonFile.resolveSibling(stem + ".bin");
 
             JsonNode root = mapper.readTree(jsonFile.toFile());
-            boolean allowNoValue = root.path("allow_no_value").asBoolean(false);
 
-            SenMLPack pack = new SenMLPack();
-            for (JsonNode r : root.path("records")) {
-                pack.addRecord(buildRecord(r));
+            byte[] encoded;
+            if (mode == Mode.TLV) {
+                // TLV takes a node tree plus a model, not a SenML pack. See TlvOracle.
+                encoded = TlvOracle.encode(root);
+            } else {
+                boolean allowNoValue = root.path("allow_no_value").asBoolean(false);
+
+                SenMLPack pack = new SenMLPack();
+                for (JsonNode r : root.path("records")) {
+                    pack.addRecord(buildRecord(r));
+                }
+
+                encoded = mode.encode(pack, allowNoValue, mapper);
             }
 
-            byte[] encoded = mode.encode(pack, allowNoValue, mapper);
             Files.write(binFile, encoded);
 
             System.out.printf(
@@ -128,20 +136,25 @@ public final class Main {
     }
 
     private enum Mode {
-        CBOR, JSON;
+        CBOR, JSON, TLV;
 
         static boolean isValid(String name) {
-            return "cbor".equals(name) || "json".equals(name);
+            return "cbor".equals(name) || "json".equals(name) || "tlv".equals(name);
         }
 
         static Mode parse(String name) {
-            return "cbor".equals(name) ? CBOR : JSON;
+            return switch (name) {
+                case "cbor" -> CBOR;
+                case "json" -> JSON;
+                default -> TLV;
+            };
         }
 
         byte[] encode(SenMLPack pack, boolean allowNoValue, ObjectMapper mapper) throws Exception {
             return switch (this) {
                 case CBOR -> new SenMLCborPackSerDes(allowNoValue).serializeToCbor(pack);
                 case JSON -> serializeJson(pack, allowNoValue, mapper);
+                case TLV -> throw new IllegalStateException("TLV is encoded by TlvOracle");
             };
         }
 

@@ -1,0 +1,8 @@
+{
+  "description": "A multiple-instance Integer Resource, the case where a wrong guess corrupts structure rather than one value",
+  "path": "/3/0",
+  "object_id": 3,
+  "resources": [
+    {"id": 6, "type": "INTEGER", "instances": {"0": 1, "1": 5}}
+  ]
+}

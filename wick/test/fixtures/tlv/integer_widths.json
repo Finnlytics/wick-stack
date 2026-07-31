@@ -1,0 +1,17 @@
+{
+  "description": "Integers at each signed-width boundary, where minimal encoding is easy to get wrong",
+  "path": "/9/0",
+  "object_id": 9,
+  "resources": [
+    {"id": 0, "type": "INTEGER", "value": 0},
+    {"id": 1, "type": "INTEGER", "value": 127},
+    {"id": 2, "type": "INTEGER", "value": 128},
+    {"id": 3, "type": "INTEGER", "value": -128},
+    {"id": 4, "type": "INTEGER", "value": -129},
+    {"id": 5, "type": "INTEGER", "value": 32767},
+    {"id": 6, "type": "INTEGER", "value": 32768},
+    {"id": 7, "type": "INTEGER", "value": 2147483647},
+    {"id": 8, "type": "INTEGER", "value": 2147483648},
+    {"id": 9, "type": "INTEGER", "value": -1}
+  ]
+}

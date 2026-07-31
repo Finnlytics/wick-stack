@@ -14,7 +14,7 @@ defmodule Wick.CodecTest do
     end
 
     test "returns nil for unregistered formats" do
-      for content_format <- [1, 41, 60, 111, 11_542, 11_543] do
+      for content_format <- [1, 41, 60, 111, 11_543, 11_544] do
         assert Codec.for_content_format(content_format) == nil
       end
     end
@@ -29,6 +29,7 @@ defmodule Wick.CodecTest do
     test "rejects the non-SenML codecs Wick ships" do
       assert Codec.senml_codec(0) == :error
       assert Codec.senml_codec(42) == :error
+      assert Codec.senml_codec(11_542) == :error
     end
 
     test "accepts nil so an absent Content-Format needs no special-casing" do
@@ -42,7 +43,7 @@ defmodule Wick.CodecTest do
       formats = Codec.content_formats()
 
       assert formats == Enum.sort(formats)
-      assert formats == [0, 42, 110, 112]
+      assert formats == [0, 42, 110, 112, 11_542]
     end
   end
 end

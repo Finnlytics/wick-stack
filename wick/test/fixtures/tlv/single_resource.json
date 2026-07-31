@@ -1,0 +1,8 @@
+{
+  "description": "A Resource path: one entry, no Instance wrapper",
+  "path": "/3/0/9",
+  "object_id": 3,
+  "resources": [
+    {"id": 9, "type": "INTEGER", "value": 87}
+  ]
+}
