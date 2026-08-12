@@ -28,6 +28,13 @@ defmodule WickDemoServer.Web.Ui do
 
   Success and failure keep their own green/red, because a `4.04` must not be mistakable for a
   `2.05` on a glance.
+
+  ## Telling the reader what to do
+
+  The page opens with a four-step guide, and every empty pane says what would fill it. That is
+  deliberate: the audience for a protocol demo is someone who has just met the protocol, and a
+  screen of LwM2M paths and CoAP codes with no entry point teaches nothing. The guide is
+  dismissible and the choice is remembered, so it costs a returning reader one click.
   """
 
   @page ~S"""
@@ -108,6 +115,14 @@ defmodule WickDemoServer.Web.Ui do
   .dot.off{background:var(--red);animation:none}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
 
+  .ghost{
+    font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.06em;
+    text-transform:uppercase; color:rgba(255,255,255,.72); background:rgba(255,255,255,.06);
+    border:1px solid var(--hero-line); border-radius:999px; padding:4px 12px; cursor:pointer;
+    flex:none; transition:all .12s;
+  }
+  .ghost:hover{color:#fff; border-color:rgba(255,255,255,.35)}
+
   /* ── Layout ── */
   main{max-width:var(--maxw); margin:0 auto; padding:22px}
   .cols{display:grid; grid-template-columns:300px minmax(0,1fr) 360px; gap:18px; align-items:start}
@@ -126,8 +141,37 @@ defmodule WickDemoServer.Web.Ui do
   .card-h .right{margin-left:auto; display:flex; gap:6px; align-items:center}
   .card-b{padding:16px}
   .card-b.flush{padding:0}
-  .empty{padding:30px 20px; text-align:center; color:var(--faint); font-size:13px}
-  .empty code{font-size:12px}
+  .empty{padding:26px 20px; text-align:center; color:var(--faint); font-size:13px; line-height:1.65}
+  .empty b{display:block; color:var(--muted); font-weight:600; margin-bottom:4px}
+  .empty code{
+    font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--ink-2);
+    background:var(--surface-2); border:1px solid var(--line); border-radius:6px;
+    padding:1.5px 6px; white-space:nowrap;
+  }
+
+  /* ── Guide ── */
+  .guide{margin-bottom:18px}
+  .steps{list-style:none; margin:0; padding:0; display:grid; gap:16px;
+    grid-template-columns:repeat(4,minmax(0,1fr))}
+  @media (max-width:1100px){ .steps{grid-template-columns:repeat(2,minmax(0,1fr))} }
+  @media (max-width:640px){ .steps{grid-template-columns:1fr} }
+  .steps li{display:flex; gap:11px; align-items:flex-start}
+  .steps .n{
+    font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; flex:none;
+    width:22px; height:22px; border-radius:50%; display:grid; place-items:center;
+    background:var(--surface-2); border:1px solid var(--line-2); color:var(--muted);
+    margin-top:1px;
+  }
+  .steps h3{font-size:13px; font-weight:700; letter-spacing:-.01em; margin-bottom:3px}
+  .steps p{margin:0; font-size:12.5px; color:var(--muted); line-height:1.55}
+  .steps code{font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--ink-2)}
+  .steps b{color:var(--ink-2); font-weight:600}
+  .legend{
+    display:flex; gap:16px; flex-wrap:wrap; align-items:center; margin-top:16px;
+    padding-top:13px; border-top:1px dashed var(--line-2); font-size:12px; color:var(--muted);
+  }
+  .legend .sw{width:9px; height:9px; border-radius:3px; display:inline-block; margin-right:6px}
+  .legend .sw.t{background:var(--teal)} .legend .sw.p{background:var(--purple)}
 
   /* ── Client list ── */
   .client{
@@ -275,10 +319,66 @@ defmodule WickDemoServer.Web.Ui do
         Wick<span class="tag">LwM2M Demo Server</span>
       </div>
       <div class="stats" id="stats"></div>
+      <button class="ghost" id="guide-toggle" aria-controls="guide" aria-expanded="true">Guide</button>
     </div>
   </header>
 
   <main>
+    <!-- The entry point. Everything below is dense with LwM2M paths and CoAP codes, which is
+         only readable once you know what to press first. -->
+    <section class="card guide" id="guide">
+      <div class="card-h">
+        <h2>How to drive a device from here</h2>
+        <div class="right"><button class="btn sm" id="guide-hide">Hide</button></div>
+      </div>
+      <div class="card-b">
+        <ol class="steps">
+          <li>
+            <span class="n">1</span>
+            <div>
+              <h3>Pick a device</h3>
+              <p><b>Clients</b> lists every device that has Registered. Click one to load the
+                 Object tree it advertised. Empty? Start the demo device — <code>./run-demo.sh</code>
+                 from the repo root starts both halves.</p>
+            </div>
+          </li>
+          <li>
+            <span class="n">2</span>
+            <div>
+              <h3>Read it</h3>
+              <p>Expand <code>3303</code> and press <b>Read</b> on <code>/3303/0</code>. The reply
+                 renders as a path/value table. <b>Discover</b> asks for the same path's
+                 attributes instead of its values.</p>
+            </div>
+          </li>
+          <li>
+            <span class="n">3</span>
+            <div>
+              <h3>Change it</h3>
+              <p><b>Write…</b> sets a value — pick the type deliberately, SenML cannot tell
+                 <code>21</code> from <code>21.0</code>. <b>Execute…</b> invokes an Executable
+                 Resource, like <code>/3/0/4</code> Reboot.</p>
+            </div>
+          </li>
+          <li>
+            <span class="n">4</span>
+            <div>
+              <h3>Watch it live</h3>
+              <p><b>Attributes…</b> first — <code>pmin 5</code>, <code>st 0.2</code> means at most
+                 one Notification per 5s, and only for a change of 0.2 or more. Then <b>Observe</b>,
+                 and watch the Event Log.</p>
+            </div>
+          </li>
+        </ol>
+        <div class="legend">
+          <span><span class="sw t"></span>device-initiated — Notify, Send, an Observe taking effect</span>
+          <span><span class="sw p"></span>server-initiated — a Read, Write or Execute you sent</span>
+          <span>paths are <code class="mono">/object/instance/resource</code></span>
+          <span>no authentication, so this binds to localhost only</span>
+        </div>
+      </div>
+    </section>
+
     <div class="cols">
       <!-- Clients -->
       <div class="stack">
@@ -289,8 +389,8 @@ defmodule WickDemoServer.Web.Ui do
           </div>
           <div class="card-b flush" id="clients">
             <div class="empty">
-              No registered clients.<br>
-              Start one with <code>cd apps/wick_demo_client &amp;&amp; iex -S mix</code>
+              <b>No devices registered.</b>
+              Start one with <code>./run-demo.sh</code>
             </div>
           </div>
         </div>
@@ -299,7 +399,10 @@ defmodule WickDemoServer.Web.Ui do
           <div class="card-h"><h2>Observations</h2>
             <div class="right"><span class="badge teal" id="obs-count">0</span></div></div>
           <div class="card-b flush" id="observations">
-            <div class="empty">No active Observe relations.</div>
+            <div class="empty">
+              <b>Nothing observed yet.</b>
+              Hit <code>Observe</code> on a path in the Object tree.
+            </div>
           </div>
         </div>
       </div>
@@ -312,7 +415,10 @@ defmodule WickDemoServer.Web.Ui do
             <div class="right" id="tree-actions"></div>
           </div>
           <div class="card-b flush" id="tree">
-            <div class="empty">Select a client to browse its Objects.</div>
+            <div class="empty">
+              <b>Select a device on the left.</b>
+              Its Objects — the ones it advertised when it Registered — appear here.
+            </div>
           </div>
         </div>
       </div>
@@ -327,7 +433,10 @@ defmodule WickDemoServer.Web.Ui do
             </div>
           </div>
           <div class="card-b flush log" id="log">
-            <div class="empty">Waiting for protocol activity…</div>
+            <div class="empty">
+              <b>Waiting for protocol activity…</b>
+              Registrations, Notifications, and every operation you run land here, newest first.
+            </div>
           </div>
         </div>
       </div>
@@ -351,6 +460,7 @@ defmodule WickDemoServer.Web.Ui do
     drafts: new Map(),  // path -> whatever has been typed into that row's form
     events: [],         // event log, newest first
     connected: false,
+    port: null,         // the CoAP port, so the empty state can tell you where to point a device
   };
   const MAX_EVENTS = 300;
 
@@ -412,9 +522,12 @@ defmodule WickDemoServer.Web.Ui do
     if (!S.clients.length) {
       S.selected = null;
       host.appendChild(el("div", { class: "empty" },
-        el("div", { text: "No registered clients." }),
+        el("b", { text: "No devices registered." }),
+        el("div", {}, "Start the demo device with ",
+          el("code", { text: "./run-demo.sh" }), " in the repo root."),
         el("div", { style: "margin-top:6px" },
-          "Start one with ", el("code", { class: "mono", text: "iex -S mix" }))));
+          "Any LwM2M 1.2 client pointed at ",
+          el("code", { text: `coap://127.0.0.1:${S.port || 5683}` }), " appears here.")));
       renderTree();
       return;
     }
@@ -444,7 +557,11 @@ defmodule WickDemoServer.Web.Ui do
     $("obs-count").textContent = S.observations.length;
 
     if (!S.observations.length) {
-      host.appendChild(el("div", { class: "empty", text: "No active Observe relations." }));
+      host.appendChild(el("div", { class: "empty" },
+        el("b", { text: "Nothing observed yet." }),
+        el("div", {}, "Set ", el("code", { text: "Attributes…" }), " on a Resource — ",
+          el("code", { text: "pmin 5" }), ", ", el("code", { text: "st 0.2" }),
+          " — then hit ", el("code", { text: "Observe" }), ".")));
       return;
     }
 
@@ -510,7 +627,9 @@ defmodule WickDemoServer.Web.Ui do
     $("tree-title").textContent = client ? client.endpoint_name : "Object Tree";
 
     if (!client) {
-      host.appendChild(el("div", { class: "empty", text: "Select a client to browse its Objects." }));
+      host.appendChild(el("div", { class: "empty" },
+        el("b", { text: "Select a device on the left." }),
+        el("div", {}, "Its Objects — the ones it advertised when it Registered — appear here.")));
       return;
     }
 
@@ -518,8 +637,9 @@ defmodule WickDemoServer.Web.Ui do
     actions.appendChild(el("button", { class: "btn sm", onclick: () => refresh() }, "Refresh"));
 
     if (!S.tree.length) {
-      host.appendChild(el("div", { class: "empty",
-        text: "This client advertised no Object Instances." }));
+      host.appendChild(el("div", { class: "empty" },
+        el("b", { text: "This device advertised no Object Instances." }),
+        el("div", {}, "Its Register carried an empty link list, so there is nothing to browse.")));
       return;
     }
 
@@ -551,19 +671,23 @@ defmodule WickDemoServer.Web.Ui do
     row.appendChild(el("div", { class: "inst-top" },
       el("span", { class: "p", text: path }),
       el("div", { class: "ops" },
-        opBtn("Read", "p", () => run(path, "read", { path })),
-        opBtn("Discover", "p", () => run(path, "discover", { path })),
+        opBtn("Read", "p", () => run(path, "read", { path }),
+          "Read the values at this path (§6.4.5)"),
+        opBtn("Discover", "p", () => run(path, "discover", { path }),
+          "List what is under this path and the attributes attached to it (§6.4.7)"),
         observeBtn(path),
         opBtn("Delete", "d", () => {
           if (confirmed(`Delete ${path} on the device?`)) run(path, "delete", { path });
-        }))));
+        }, "Delete this Object Instance on the device (§6.4.10)"))));
 
     // Per-path forms, collapsed behind a toggle so the tree stays scannable.
     const openForm = S.forms.get(path);
     row.appendChild(el("div", { class: "row" },
-      formBtn(path, "w", "Write…", openForm),
-      formBtn(path, "x", "Execute…", openForm),
-      formBtn(path, "a", "Attributes…", openForm)));
+      formBtn(path, "w", "Write…", openForm, "Set a value on the device (§6.4.4)"),
+      formBtn(path, "x", "Execute…", openForm,
+        "Invoke an Executable Resource, e.g. /3/0/4 Reboot (§6.4.8)"),
+      formBtn(path, "a", "Attributes…", openForm,
+        "Set the notification attributes that govern Observe (§6.4.6)")));
 
     if (openForm === "w") row.appendChild(writeForm(path));
     else if (openForm === "x") row.appendChild(executeForm(path));
@@ -574,14 +698,15 @@ defmodule WickDemoServer.Web.Ui do
     return row;
   }
 
-  const opBtn = (label, kind, onclick) =>
-    el("button", { class: "btn" + (kind ? " " + kind : ""), onclick }, label);
+  const opBtn = (label, kind, onclick, title) =>
+    el("button", { class: "btn" + (kind ? " " + kind : ""), onclick, title }, label);
 
   // Only one form open per row: two stacked forms in a tree row is unreadable.
-  function formBtn(path, kind, label, openForm) {
+  function formBtn(path, kind, label, openForm, title) {
     const active = openForm === kind;
     return el("button", {
       class: "btn" + (active ? " t" : ""),
+      title,
       onclick: () => {
         active ? S.forms.delete(path) : S.forms.set(path, kind);
         renderTree();
@@ -609,6 +734,9 @@ defmodule WickDemoServer.Web.Ui do
 
     return el("button", {
       class: "btn " + (active ? "on" : "t"),
+      title: active
+        ? "Cancel this Observe relation — the device stops sending Notifications"
+        : "Ask the device to Notify whenever this path changes, subject to its attributes (§6.5.3)",
       onclick: () => active ? cancelObserve(active) : observe(path),
     }, active ? "Observing" : "Observe");
   }
@@ -857,6 +985,7 @@ defmodule WickDemoServer.Web.Ui do
   async function refreshStats() {
     try {
       const s = await api("/api/summary");
+      S.port = s.port;
       const host = $("stats");
       clear(host);
       host.appendChild(el("span", { class: "stat live" },
@@ -933,7 +1062,10 @@ defmodule WickDemoServer.Web.Ui do
     clear(host);
 
     if (!S.events.length) {
-      host.appendChild(el("div", { class: "empty", text: "Waiting for protocol activity…" }));
+      host.appendChild(el("div", { class: "empty" },
+        el("b", { text: "Waiting for protocol activity…" }),
+        el("div", {}, "Registrations, Notifications, and every operation you run "
+          + "land here, newest first.")));
       return;
     }
     for (const e of S.events) host.appendChild(eventRow(e, false));
@@ -979,6 +1111,28 @@ defmodule WickDemoServer.Web.Ui do
       });
     }
   }
+
+  // ── Guide ────────────────────────────────────────────────────────────────────
+
+  // Shown by default — a first-time reader needs the entry point more than they need the
+  // vertical space — and the choice is remembered so a returning one pays a single click.
+  const GUIDE_KEY = "wick.guide.hidden";
+
+  function showGuide(show) {
+    $("guide").style.display = show ? "" : "none";
+    $("guide-toggle").setAttribute("aria-expanded", show ? "true" : "false");
+    // localStorage is unavailable in some privacy modes, and a guide that can't remember being
+    // dismissed is a far better outcome than a page that fails to boot.
+    try { localStorage.setItem(GUIDE_KEY, show ? "0" : "1"); } catch (_e) { /* fine */ }
+  }
+
+  let guideHidden = false;
+  try { guideHidden = localStorage.getItem(GUIDE_KEY) === "1"; } catch (_e) { /* fine */ }
+  if (guideHidden) showGuide(false);
+
+  $("guide-hide").addEventListener("click", () => showGuide(false));
+  $("guide-toggle").addEventListener("click", () =>
+    showGuide($("guide").style.display === "none"));
 
   // ── Boot ─────────────────────────────────────────────────────────────────────
   $("clear-log").addEventListener("click", () => { S.events = []; renderLog(); });

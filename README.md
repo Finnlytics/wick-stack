@@ -28,17 +28,22 @@ Codecs: SenML CBOR and JSON, Plain Text, Opaque — all bidirectional and verifi
 
 ## Try it
 
-Two terminals, no build step beyond `mix`:
-
 ```bash
-# Terminal 1 — the server, CoAP on 5683 and a UI on 8683
-cd demo/wick_demo_server && mix deps.get && iex -S mix
-
-# Terminal 2 — a device that registers and reports a sensor
-cd demo/wick_demo_client && mix deps.get && iex -S mix
+./run-demo.sh
 ```
 
-Open **http://localhost:8683**. The client appears; expand its Object tree and you can Read, Write, Execute, Discover and Observe it, with notifications streaming in live.
+That builds both demos, starts the server (CoAP on 5683, web UI on 8683) and a device that registers with it, streams both logs into the one terminal, and opens the UI. Ctrl-C stops both — the device deregisters on the way out. `--server-only` leaves the CoAP port free for Leshan or a real device; `--help` lists the rest.
+
+The page opens on a four-step guide: pick the device, Read it, Write to it, then set notification attributes and Observe it with notifications streaming in live.
+
+Both nodes run named, so the IEx recipes in the demo READMEs are still a `--remsh` away — the exact command is printed at startup.
+
+By hand instead, two terminals:
+
+```bash
+cd demo/wick_demo_server && mix deps.get && iex -S mix
+cd demo/wick_demo_client && mix deps.get && iex -S mix
+```
 
 > The UI has no authentication and can Write and Execute against every registered device, so it binds to loopback only. Override with `config :wick_demo_server, http_ip: {0, 0, 0, 0}` if you want it reachable — and put something authenticating in front of it.
 

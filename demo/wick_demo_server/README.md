@@ -21,8 +21,10 @@ It's a *demo*: single-node, in-memory, no persistence, no access control. Useful
 
 ## Running
 
+From the repository root, `./run-demo.sh` starts this server *and* a device and opens the UI. To run only this half — because Leshan or a real device is providing the other — use `./run-demo.sh --server-only`, or start it directly:
+
 ```bash
-cd apps/wick_demo_server
+cd demo/wick_demo_server
 mix deps.get
 iex -S mix
 ```
@@ -37,7 +39,7 @@ Two boot log lines:
 Open **http://localhost:8683** and point any LwM2M 1.2 client at `coap://127.0.0.1:5683`. The quickest way to have something to look at is the sibling demo client, in a second terminal:
 
 ```bash
-cd apps/wick_demo_client && iex -S mix
+cd demo/wick_demo_client && iex -S mix
 ```
 
 Each protocol event also logs a one-line summary:
@@ -51,7 +53,9 @@ Each protocol event also logs a one-line summary:
 
 ## The web UI
 
-Three panes:
+The page opens on a guide — four steps from "pick a device" to "watch Notifications arrive" — and every empty pane says what would fill it. **Hide** dismisses the guide and **Guide** in the header brings it back; the choice is remembered per browser.
+
+Under it, three panes:
 
 - **Clients** — every registration, with its endpoint name, peer address, and a countdown to expiry. Click one to browse it.
 - **Object tree** — the Object Instances the client advertised at Register. Expand an Object and each Instance gets **Read**, **Discover**, **Observe**, **Delete**, plus collapsible forms for **Write**, **Execute**, and **Write-Attributes**. Results render inline: SenML bodies become a path/value table with type annotations, link-format becomes a target/attributes table.

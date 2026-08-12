@@ -1,6 +1,6 @@
 # WickDemoClient
 
-A runnable LwM2M 1.2 **client** built on [Wick](../../wick) + [WickCoap](../../wick_coap). Counterpart to [`apps/wick_demo_server`](../wick_demo_server) — together they prove the Wick stack works end-to-end over real CoAP/UDP.
+A runnable LwM2M 1.2 **client** built on [Wick](../../wick) + [WickCoap](../../wick_coap). Counterpart to [`wick_demo_server`](../wick_demo_server) — together they prove the Wick stack works end-to-end over real CoAP/UDP.
 
 This is the first piece of code that *uses* Wick the way a real device would, and a stepping stone for the firmware that will eventually run on the nRF54L15.
 
@@ -25,15 +25,19 @@ Values are stored as `{type, value}` tuples (`{:float, 22.5}`, `{:string, "Cel"}
 
 ## Running alongside the demo server
 
+`./run-demo.sh` from the repository root starts both halves in one terminal and opens the UI. `--client-only` starts just this device, for pointing at a server that is already running.
+
+By hand, two terminals:
+
 ```bash
 # Terminal 1 — server on UDP 5683, web UI on 8683
-cd apps/wick_demo_server
+cd demo/wick_demo_server
 iex -S mix
 # [info] WickDemoServer web UI on http://localhost:8683
 # [info] WickDemoServer.Endpoint listening on udp:5683 (handler=WickDemoServer.Handler)
 
 # Terminal 2 — client connects to localhost:5683
-cd apps/wick_demo_client
+cd demo/wick_demo_client
 iex -S mix
 # [info] WickDemoClient.Endpoint bound on UDP/<ephemeral> (handler=WickDemoClient.Handler)
 # [info] REGISTER ok ep=wick-demo-client → id=r0 (lifetime=60s)

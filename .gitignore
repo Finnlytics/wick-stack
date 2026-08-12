@@ -11,6 +11,9 @@ erl_crash.dump
 *.ez
 *.beam
 
+# run-demo.sh keeps each node's log here
+demo/.logs/
+
 # Mix
 *.secret.exs
 .elixir_ls/

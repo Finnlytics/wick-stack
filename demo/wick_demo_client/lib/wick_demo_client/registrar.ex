@@ -84,6 +84,12 @@ defmodule WickDemoClient.Registrar do
 
   @impl GenServer
   def init(opts) do
+    # Without this, `terminate/2` below never runs: a supervisor stops a child by sending it
+    # `exit(:shutdown)`, and a process that isn't trapping exits simply dies. The Deregister
+    # would be lost on every shutdown, and the server would keep advertising a device that has
+    # gone until its lifetime lapsed.
+    Process.flag(:trap_exit, true)
+
     # The Endpoint child is started before this one (rest_for_one), so its pid is
     # already available via the registered name. Tests can override with `:endpoint`.
     endpoint = Keyword.get(opts, :endpoint) || WickDemoClient.Endpoint.pid()

@@ -18,7 +18,7 @@ Pre-release, but functionally complete for LwM2M 1.2: **all four interfaces** ar
 - **Device Management Interface** (§6.4): Read / Write / Execute / Discover / Create / Delete / Write-Attributes and the Composite variants.
 - **Information Reporting Interface** (§6.5): Observe / Cancel-Observe / Notify / Send, with notification attributes (`pmin`, `pmax`, `gt`, `lt`, `st`) and the [RFC 7641](https://www.rfc-editor.org/rfc/rfc7641) reordering rules.
 
-Every operation has both a `to_wire/1` and a `from_wire/1`, so Wick drives a **client** as readily as a server. `apps/wick_demo_client` and `apps/wick_demo_server` in the parent repository are working examples of each.
+Every operation has both a `to_wire/1` and a `from_wire/1`, so Wick drives a **client** as readily as a server. `demo/wick_demo_client` and `demo/wick_demo_server` in the parent repository are working examples of each.
 
 Not yet done: LwM2M CBOR and TLV codecs (SenML covers 1.1+ deployments), and the Access Control Object (§6.3.4).
 
@@ -163,11 +163,11 @@ Wick.Attributes.should_notify?(attrs, %{last_value: 20.0, since_last_ms: 61_000}
 ### Worked examples
 
 Two runnable apps in the parent repository put all of the above together, and they talk to
-each other over real UDP:
+each other over real UDP — `./run-demo.sh` there starts both:
 
-- **`apps/wick_demo_server`** — a server with a browser UI: registered clients, an Object
+- **`demo/wick_demo_server`** — a server with a browser UI: registered clients, an Object
   tree browser, Read/Write/Execute/Observe controls, and a live event log.
-- **`apps/wick_demo_client`** — a device with an Object tree, a synthetic sensor, and
+- **`demo/wick_demo_client`** — a device with an Object tree, a synthetic sensor, and
   attribute-gated notifications.
 
 Wick's own `test/integration/` covers each interface end-to-end over CoAP/UDP and is the

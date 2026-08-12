@@ -17,13 +17,12 @@ defmodule WickDemoClient do
 
   ## Running alongside the demo server
 
-      # Terminal 1
-      cd apps/wick_demo_server
-      iex -S mix
+      # Both halves, one terminal, from the repository root
+      ./run-demo.sh
 
-      # Terminal 2
-      cd apps/wick_demo_client
-      iex -S mix
+      # Or by hand
+      cd demo/wick_demo_server && iex -S mix
+      cd demo/wick_demo_client && iex -S mix
 
   The client logs each protocol step. From the server's IEx, `WickDemoServer.registrations()`
   shows the client, and `WickDemoServer.read(id, "/3303/0/5700")` reads its temperature.
