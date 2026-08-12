@@ -158,13 +158,72 @@ defmodule Wick.Object.RegistryTest do
     end
   end
 
+  describe "standard/0" do
+    # The catalogue the protocol itself depends on. If one of these disappears, bootstrap
+    # (Objects 0 and 1), access control (2) or the most common Read there is (3) loses its
+    # model, and the non-self-describing codecs quietly fall back to opaque.
+    @bundled [
+      {0, "LWM2M Security"},
+      {1, "LwM2M Server"},
+      {2, "LwM2M Access Control"},
+      {3, "Device"},
+      {4, "Connectivity Monitoring"},
+      {5, "Firmware Update"},
+      {6, "Location"},
+      {7, "Connectivity Statistics"},
+      {21, "LWM2M OSCORE"},
+      {3303, "Temperature"}
+    ]
+
+    test "bundles the Objects the protocol depends on" do
+      registry = Registry.standard()
+
+      for {id, name} <- @bundled do
+        assert %Definition{name: ^name} = Registry.lookup(registry, id),
+               "Object #{id} (#{name}) is missing from the bundled catalogue"
+      end
+    end
+
+    test "every bundled Object has at least one Resource" do
+      registry = Registry.standard()
+
+      for {id, _name} <- @bundled do
+        assert Registry.lookup(registry, id).resources != [],
+               "Object #{id} parsed with no Resources"
+      end
+    end
+
+    test "resolves the Resources the rest of the library reasons about" do
+      registry = Registry.standard()
+
+      # Device / Current Time — the case that motivated typing values from the model at all.
+      assert Registry.lookup_resource(registry, 3, 13).type == :time
+      # Server / Lifetime, read on every registration.
+      assert Registry.lookup_resource(registry, 1, 1).type == :integer
+      # Security / Server URI.
+      assert Registry.lookup_resource(registry, 0, 0).type == :string
+      assert Registry.lookup_resource(registry, 3303, 5700).name == "Sensor Value"
+    end
+
+    test "is the same content as parsing priv/ddf at runtime" do
+      assert {:ok, loaded} = Registry.load_from_dir(Application.app_dir(:wick, "priv/ddf"))
+      assert Registry.object_ids(loaded) == Registry.object_ids(Registry.standard())
+      assert loaded == Registry.standard()
+    end
+
+    test "returns a plain value, so it can be extended without affecting anyone else" do
+      extended = Registry.register(Registry.standard(), definition(9999, "Vendor Object"))
+
+      assert Registry.lookup(extended, 9999)
+      refute Registry.lookup(Registry.standard(), 9999)
+    end
+  end
+
   describe "load_from_dir/1" do
     test "loads every *.xml in priv/ddf into a working registry" do
       ddf_dir = Application.app_dir(:wick, "priv/ddf")
 
       assert {:ok, registry} = Registry.load_from_dir(ddf_dir)
-      assert Registry.size(registry) == 3
-      assert Registry.object_ids(registry) == [3, 6, 3303]
       assert Registry.lookup(registry, 6).name == "Location"
       assert Registry.lookup_resource(registry, 3303, 5700).name == "Sensor Value"
     end

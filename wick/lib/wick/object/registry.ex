@@ -35,15 +35,11 @@ defmodule Wick.Object.Registry do
       iex> Wick.Object.Registry.size(registry)
       0
 
-      iex> {:ok, registry} = Wick.Object.Registry.load_from_dir(
-      ...>   Application.app_dir(:wick, "priv/ddf")
-      ...> )
+      iex> registry = Wick.Object.Registry.standard()
       iex> Wick.Object.Registry.object_ids(registry)
-      [3, 6, 3303]
+      [0, 1, 2, 3, 4, 5, 6, 7, 21, 3303]
 
-      iex> {:ok, registry} = Wick.Object.Registry.load_from_dir(
-      ...>   Application.app_dir(:wick, "priv/ddf")
-      ...> )
+      iex> registry = Wick.Object.Registry.standard()
       iex> Wick.Object.Registry.lookup(registry, 6).name
       "Location"
       iex> Wick.Object.Registry.lookup_resource(registry, 6, 0).name
@@ -67,6 +63,66 @@ defmodule Wick.Object.Registry do
   @doc "Build an empty registry."
   @spec new() :: t()
   def new, do: %__MODULE__{}
+
+  # The bundled catalogue, parsed at compile time and embedded in the BEAM. Reading and
+  # parsing XML on every call — or worse, once per request — would be a poor default for
+  # something this static, and `Application.app_dir/2` is unavailable in an escript or a
+  # release that strips priv. `@external_resource` makes a change to any DDF file recompile
+  # this module.
+  @ddf_dir Path.expand("../../../priv/ddf", __DIR__)
+
+  @ddf_files @ddf_dir
+             |> File.ls!()
+             |> Enum.filter(&String.ends_with?(&1, ".xml"))
+             |> Enum.sort()
+             |> Enum.map(&Path.join(@ddf_dir, &1))
+
+  for file <- @ddf_files do
+    @external_resource file
+  end
+
+  @standard_objects Map.new(@ddf_files, fn file ->
+                      {:ok, definition} = Ddf.parse(File.read!(file))
+                      {definition.object_id, definition}
+                    end)
+
+  @doc """
+  A registry preloaded with the Object definitions Wick bundles.
+
+  The catalogue is vendored from the [OMNA LwM2M
+  Registry](https://github.com/OpenMobileAlliance/lwm2m-registry) and covers the Objects the
+  protocol itself depends on — Security (0), Server (1), Access Control (2), Device (3),
+  Connectivity Monitoring (4), Firmware Update (5), Location (6), Connectivity Statistics
+  (7), OSCORE (21) — plus Temperature (3303) as a representative IPSO Object. See
+  `priv/ddf/README.md` for provenance and how to re-sync.
+
+  Parsed at compile time, so this is a struct literal at runtime: no file IO, no XML parsing,
+  and it works in a release that strips `priv`.
+
+  A model matters most for the formats that are not self-describing. `Wick.Codec.Tlv` cannot
+  tell an Integer from a Float from a Time without one:
+
+      registry = Wick.Object.Registry.standard()
+      {:ok, pack} = Wick.Codec.Tlv.decode(payload, path: path, model: registry)
+
+  Object versions are not yet part of lookup — the bundled files are the latest published
+  version of each Object, and a device advertising an older one resolves against that.
+
+  ## Examples
+
+      iex> Wick.Object.Registry.lookup(Wick.Object.Registry.standard(), 3).name
+      "Device"
+
+      iex> {:ok, path} = Wick.Path.parse("/3/0/13")
+      iex> Wick.Model.resource_type(Wick.Object.Registry.standard(), path)
+      :time
+
+      iex> {:ok, path} = Wick.Path.parse("/1/0/1")
+      iex> Wick.Model.resource_type(Wick.Object.Registry.standard(), path)
+      :integer
+  """
+  @spec standard() :: t()
+  def standard, do: %__MODULE__{objects: @standard_objects}
 
   @doc """
   Build a registry from a list of `Wick.Object.Definition`s.
@@ -137,13 +193,19 @@ defmodule Wick.Object.Registry do
 
   Fails fast on the first parse error; returns the offending file path in the error meta.
 
+  For the Objects Wick ships, use `standard/0` instead — it is parsed at compile time and
+  costs nothing at runtime. This function is for *your* DDF: vendor Objects, or a newer
+  version of a standard one.
+
   ## Examples
 
       iex> {:ok, registry} = Wick.Object.Registry.load_from_dir(
       ...>   Application.app_dir(:wick, "priv/ddf")
       ...> )
-      iex> Wick.Object.Registry.size(registry)
-      3
+      iex> Wick.Object.Registry.size(registry) == Wick.Object.Registry.size(
+      ...>   Wick.Object.Registry.standard()
+      ...> )
+      true
   """
   @spec load_from_dir(Path.t()) :: {:ok, t()} | {:error, Error.t()}
   def load_from_dir(dir) when is_binary(dir) do

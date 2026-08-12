@@ -113,7 +113,11 @@ defmodule Wick.MixProject do
       },
       # `docs` is included so the ADRs travel with the package and `mix docs` works from a
       # fetched tarball rather than silently dropping every extra.
-      files: ~w(lib priv docs mix.exs README.md CHANGELOG.md LICENSE .formatter.exs)
+      #
+      # `priv/ddf` rather than `priv`: Hex globs the filesystem and does not consult
+      # .gitignore, so a plain `priv` would sweep in the 4 MB Dialyzer PLT that
+      # `mix check` leaves in `priv/plts/`.
+      files: ~w(lib priv/ddf docs mix.exs README.md CHANGELOG.md LICENSE .formatter.exs)
     ]
   end
 
