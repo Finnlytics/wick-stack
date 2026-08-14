@@ -117,7 +117,8 @@ defmodule Wick.JsonTest do
     end
 
     test "decodes floats including negative and exponent forms" do
-      assert {:ok, 0.0} = Json.decode("0.0")
+      assert {:ok, +0.0} = Json.decode("0.0")
+      assert {:ok, -0.0} = Json.decode("-0.0")
       assert {:ok, 1.5} = Json.decode("1.5")
       assert {:ok, -3.14} = Json.decode("-3.14")
       assert {:ok, 1.0e10} = Json.decode("1e10")
