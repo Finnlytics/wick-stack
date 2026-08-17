@@ -83,7 +83,7 @@ defmodule Wick.RegistrationTest do
 
   describe "Server.handle/2 — Register" do
     test "stores the record, returns 2.01 Created with Location-Path" do
-      req = %{
+      req = %Server.Request{
         method: :post,
         path: ["rd"],
         query: [{"ep", "device-1"}, {"lt", "60"}, {"lwm2m", "1.2"}],
@@ -100,7 +100,7 @@ defmodule Wick.RegistrationTest do
     end
 
     test "missing ep → 4.00 Bad Request" do
-      req = %{
+      req = %Server.Request{
         method: :post,
         path: ["rd"],
         query: [],
@@ -113,7 +113,7 @@ defmodule Wick.RegistrationTest do
     end
 
     test "empty payload → 4.00 Bad Request" do
-      req = %{
+      req = %Server.Request{
         method: :post,
         path: ["rd"],
         query: [{"ep", "dev"}],
@@ -129,7 +129,7 @@ defmodule Wick.RegistrationTest do
     test "re-registering the same endpoint replaces the previous record" do
       store = Store.new()
 
-      base = %{
+      base = %Server.Request{
         method: :post,
         path: ["rd"],
         query: [{"ep", "device-1"}],
@@ -152,7 +152,7 @@ defmodule Wick.RegistrationTest do
 
   describe "Server.handle/2 — Update" do
     setup do
-      register_req = %{
+      register_req = %Server.Request{
         method: :post,
         path: ["rd"],
         query: [{"ep", "dev"}],
@@ -167,7 +167,7 @@ defmodule Wick.RegistrationTest do
     end
 
     test "updates lifetime + updated_at", ctx do
-      update_req = %{
+      update_req = %Server.Request{
         method: :post,
         path: ["rd", ctx.id],
         query: [{"lt", "120"}],
@@ -181,7 +181,7 @@ defmodule Wick.RegistrationTest do
     end
 
     test "unknown location → 4.04 Not Found", ctx do
-      req = %{
+      req = %Server.Request{
         method: :post,
         path: ["rd", "nope"],
         query: [],
@@ -196,7 +196,7 @@ defmodule Wick.RegistrationTest do
 
   describe "Server.handle/2 — Deregister" do
     test "removes the record, returns 2.02 Deleted" do
-      register_req = %{
+      register_req = %Server.Request{
         method: :post,
         path: ["rd"],
         query: [{"ep", "dev"}],
@@ -208,21 +208,37 @@ defmodule Wick.RegistrationTest do
       {response, store} = Server.handle(register_req, Store.new())
       [_, id] = response.location_path
 
-      dereg = %{method: :delete, path: ["rd", id], query: [], payload: "", peer: nil, now: 0}
+      dereg = %Server.Request{
+        method: :delete,
+        path: ["rd", id],
+        query: [],
+        payload: "",
+        peer: nil,
+        now: 0
+      }
+
       {%Server.Response{code: :deleted}, store} = Server.handle(dereg, store)
 
       assert :error = Store.fetch(store, id)
     end
 
     test "unknown location → 4.04 Not Found" do
-      req = %{method: :delete, path: ["rd", "nope"], query: [], payload: "", peer: nil, now: 0}
+      req = %Server.Request{
+        method: :delete,
+        path: ["rd", "nope"],
+        query: [],
+        payload: "",
+        peer: nil,
+        now: 0
+      }
+
       assert {%Server.Response{code: :not_found}, _} = Server.handle(req, Store.new())
     end
   end
 
   describe "Server.handle/2 — unknown route" do
     test "anything else → 4.04 Not Found" do
-      req = %{method: :get, path: ["foo"], query: [], payload: "", peer: nil, now: 0}
+      req = %Server.Request{method: :get, path: ["foo"], query: [], payload: "", peer: nil, now: 0}
       assert {%Server.Response{code: :not_found}, _} = Server.handle(req, Store.new())
     end
   end
