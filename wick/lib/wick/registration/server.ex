@@ -36,14 +36,20 @@ defmodule Wick.Registration.Server do
 
   @type method :: :post | :put | :delete | :get
 
-  @type request :: %{
-          method: method(),
-          path: [String.t()],
-          query: [{String.t(), String.t() | nil}],
-          payload: binary(),
-          peer: term() | nil,
-          now: integer()
-        }
+  defmodule Request do
+    @moduledoc false
+
+    @type t :: %__MODULE__{
+            method: Wick.Registration.Server.method(),
+            path: [String.t()],
+            query: [{String.t(), String.t()}],
+            payload: String.t(),
+            peer: term() | nil,
+            now: integer()
+          }
+    @enforce_keys [:method, :path, :query, :payload, :peer, :now]
+    defstruct [:method, :path, :query, :payload, :peer, :now]
+  end
 
   @doc """
   Dispatch a parsed inbound request against the store.
@@ -56,20 +62,21 @@ defmodule Wick.Registration.Server do
 
   Anything else returns `4.04 Not Found`.
   """
-  @spec handle(request(), Store.t()) :: {Response.t(), Store.t()}
-  def handle(%{method: :post, path: ["rd"]} = req, store), do: handle_register(req, store)
+  @spec handle(Request.t(), Store.t()) :: {Response.t(), Store.t()}
+  def handle(%Request{method: :post, path: ["rd"]} = req, store),
+    do: handle_register(req, store)
 
-  def handle(%{method: :post, path: ["rd", location]} = req, store),
+  def handle(%Request{method: :post, path: ["rd", location]} = req, store),
     do: handle_update(req, store, location)
 
-  def handle(%{method: :delete, path: ["rd", location]}, store),
+  def handle(%Request{method: :delete, path: ["rd", location]}, store),
     do: handle_deregister(store, location)
 
-  def handle(_req, store) do
+  def handle(%Request{}, store) do
     {%Response{code: :not_found}, store}
   end
 
-  defp handle_register(%{query: query, payload: payload, peer: peer, now: now}, store) do
+  defp handle_register(%Request{query: query, payload: payload, peer: peer, now: now}, store) do
     with {:ok, endpoint_name} <- require_param(query, "ep"),
          {:ok, objects} <- decode_objects(payload),
          {:ok, lifetime} <- positive_integer(query, "lt", 86_400) do

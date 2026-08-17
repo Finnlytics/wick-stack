@@ -47,7 +47,7 @@ defmodule WickDemoServer.Store do
   shared store. Returns the `%Server.Response{}` so the handler can shape the CoAP
   reply.
   """
-  @spec handle_request(Server.request()) :: Server.Response.t()
+  @spec handle_request(Server.Request.t()) :: Server.Response.t()
   def handle_request(parsed_request), do: GenServer.call(@name, {:handle, parsed_request})
 
   # ── GenServer callbacks ────────────────────────────────────────────────────
@@ -114,7 +114,7 @@ defmodule WickDemoServer.Store do
 
   defp schedule_sweep(interval), do: Process.send_after(self(), :sweep, interval)
 
-  defp deregister?(%{method: :delete, path: ["rd", _id]}, %Server.Response{code: :deleted}),
+  defp deregister?(%Server.Request{method: :delete, path: ["rd", _id]}, %Server.Response{code: :deleted}),
     do: true
 
   defp deregister?(_request, _response), do: false
@@ -124,7 +124,7 @@ defmodule WickDemoServer.Store do
   # Emitted for the web UI. `Events.publish/2` is a no-op with no subscribers, so the IEx-only
   # path costs nothing.
   defp publish_registration_event(
-         %{method: :post, path: ["rd"]},
+         %Server.Request{method: :post, path: ["rd"]},
          %Server.Response{code: :created, location_path: ["rd", id]},
          store
        ) do
@@ -144,7 +144,7 @@ defmodule WickDemoServer.Store do
   end
 
   defp publish_registration_event(
-         %{method: :post, path: ["rd", id]},
+         %Server.Request{method: :post, path: ["rd", id]},
          %Server.Response{code: :changed},
          store
        ) do
@@ -162,7 +162,7 @@ defmodule WickDemoServer.Store do
   end
 
   defp publish_registration_event(
-         %{method: :delete, path: ["rd", id]},
+         %Server.Request{method: :delete, path: ["rd", id]},
          %Server.Response{code: :deleted},
          _store
        ) do
@@ -171,7 +171,7 @@ defmodule WickDemoServer.Store do
 
   defp publish_registration_event(_request, _response, _store), do: :ok
 
-  defp location_of(%{path: ["rd", id]}), do: id
+  defp location_of(%Server.Request{path: ["rd", id]}), do: id
   defp location_of(_request), do: nil
 
   # Guarded on the process being alive: the Store can outlive Observations during shutdown,

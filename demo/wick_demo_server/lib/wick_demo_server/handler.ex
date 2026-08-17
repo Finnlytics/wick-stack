@@ -73,7 +73,7 @@ defmodule WickDemoServer.Handler do
   # ── Registration (/rd*) ────────────────────────────────────────────────────
 
   defp handle_registration(%Message{} = request, peer) do
-    parsed = %{
+    parsed = %Server.Request{
       method: coap_method(request.code),
       path: Handler.uri_path(request.options),
       query: parse_query(request.options),

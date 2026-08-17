@@ -5,7 +5,7 @@ defmodule Wick.Test.CoapRegistrationHandler do
 
   Responsibilities:
 
-  * Parse incoming CoAP requests into the `%{method, path, query, payload, peer, now}`
+  * Parse incoming CoAP requests into the `%Server.Request{} 
     shape `Wick.Registration.Server.handle/2` expects.
   * Translate the returned `%Server.Response{}` into a CoAP message, including
     `Location-Path` options for Register and a CoAP code drawn from the response atom.
@@ -29,7 +29,7 @@ defmodule Wick.Test.CoapRegistrationHandler do
 
   @impl WickCoap.Handler
   def handle_request(%Message{} = request, peer, %{store: store_agent}) do
-    parsed = %{
+    parsed = %Server.Request{
       method: coap_method(request.code),
       path: Handler.uri_path(request.options),
       query: parse_query(request.options),
