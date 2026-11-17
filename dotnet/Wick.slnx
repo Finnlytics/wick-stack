@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Wick.Coap/Wick.Coap.csproj" />
+    <Project Path="src/Wick.Lwm2m/Wick.Lwm2m.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Wick.Coap.Tests/Wick.Coap.Tests.csproj" />
+    <Project Path="tests/Wick.Lwm2m.Tests/Wick.Lwm2m.Tests.csproj" />
+  </Folder>
+</Solution>

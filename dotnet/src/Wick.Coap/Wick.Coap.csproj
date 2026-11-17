@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <RootNamespace>Wick.Coap</RootNamespace>
+    <Description>CoAP for .NET: the RFC 7252 message layer and reliability, block-wise transfer (RFC 7959), Observe (RFC 7641), and UDP and DTLS 1.2 PSK server transports with Connection ID (RFC 9146).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.7.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Wick.Coap.Tests" />
+  </ItemGroup>
+
+</Project>
