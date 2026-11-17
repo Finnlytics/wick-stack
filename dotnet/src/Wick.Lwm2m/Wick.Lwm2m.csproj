@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Description>LwM2M protocol primitives for .NET: paths, the object model, codecs, and the registration, device management and information reporting interfaces, with no transport and no dependencies.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The bundled object catalogue. The DDF files are shared with the Elixir library rather than copied. -->
+    <EmbeddedResource Include="..\..\..\wick\priv\ddf\*.xml" LinkBase="Model\Ddf" LogicalName="Wick.Lwm2m.Ddf.%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Wick.Lwm2m.Tests" />
+  </ItemGroup>
+
+</Project>
